@@ -1,0 +1,9 @@
+main{max-width:520px}.ord{display:block}
+.big{font-size:30px;margin:6px 0}
+.ctl{display:flex;align-items:center;gap:10px;margin:8px 0}
+.menos{width:34px;height:34px;border-radius:50%;border:0;background:var(--rojo);color:#fff;font-weight:600}
+.oval{display:flex;gap:6px;padding:4px;border:1px solid var(--ink);border-radius:99px;background:#f4f3f1}
+.oval button{border:0;border-radius:99px;background:var(--opalo);padding:5px 14px;font-weight:600}
+.cap{margin-bottom:12px}
+.valid{max-width:520px;margin:16px auto 0;padding:0 16px}
+.cod{display:flex;gap:8px;margin-top:8px}.cod input{flex:1;font:inherit;font-size:18px;letter-spacing:.2em;padding:9px 12px;border:1px solid var(--ink);border-radius:10px;background:#fff}
