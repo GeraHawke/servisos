@@ -1,9 +1,17 @@
-main{max-width:520px}.ord{display:block}
+main{max-width:1100px;padding-bottom:40px}.ord{display:block}
 .big{font-size:30px;margin:6px 0}
 .ctl{display:flex;align-items:center;gap:10px;margin:8px 0}
 .menos{width:34px;height:34px;border-radius:50%;border:0;background:var(--rojo);color:#fff;font-weight:600}
 .oval{display:flex;gap:6px;padding:4px;border:1px solid var(--ink);border-radius:99px;background:#f4f3f1}
 .oval button{border:0;border-radius:99px;background:var(--opalo);padding:5px 14px;font-weight:600}
 .cap{margin-bottom:12px}
-.valid{max-width:520px;margin:16px auto 0;padding:0 16px}
+.valid{max-width:1100px;margin:16px auto 0;padding:0 16px}
 .cod{display:flex;gap:8px;margin-top:8px}.cod input{flex:1;font:inherit;font-size:18px;letter-spacing:.2em;padding:9px 12px;border:1px solid var(--ink);border-radius:10px;background:#fff}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.grid h2{margin-top:0}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.tabs{display:flex;gap:4px;margin-left:18px}.tabs button{background:none;border:0;padding:8px 14px;border-radius:8px}.tabs .on{background:var(--claro);font-weight:600}
+.resumen{display:flex;gap:12px;margin-bottom:16px}.resumen>div{flex:1;background:rgba(255,255,255,.9);border:1px solid var(--borde);border-radius:12px;padding:12px 14px}.resumen b{font:500 22px Unbounded,sans-serif;display:block}
+.tblw{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;background:rgba(255,255,255,.92);border:1px solid var(--borde)}
+.tbl th{text-align:left;font-weight:600;color:var(--mut);font-size:13px;padding:10px 12px;background:#f4f7f8;border-bottom:1px solid var(--borde)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--borde);vertical-align:top}

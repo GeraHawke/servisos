@@ -12,6 +12,7 @@ export function tick(e) {
     } else if (p.neg !== CFG.MANUAL) {
       if (p.est === 'recibida' && t >= p.tOrd + p.delay * 2000) { p.est = 'preparando'; p.tInicio = t; c = true; }
       else if (p.est === 'preparando' && t >= p.tOrd + p.delay * 5000) { p.est = 'lista'; p.tLista = t; c = true; }
+      else if (p.est === 'lista' && t >= p.tLista + p.delay * 5000) { p.est = 'entregada'; p.tEntrega = t; c = true; } // el cliente "pasa a recoger" solo
     }
   }
   return c;

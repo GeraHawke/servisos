@@ -28,3 +28,6 @@ small{display:block;color:var(--mut)}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btns>*{flex:1}
 .spin{display:inline-block;width:12px;height:12px;border:2px dashed var(--mut);border-radius:50%;animation:g 1.2s linear infinite;vertical-align:-1px}
 @keyframes g{to{transform:rotate(360deg)}}
+
+.chip.norecogida,.chip.canceladaneg{background:#f6dfe2;border-color:var(--rojo);color:var(--rojo)}
+.bono{background:#e4f6ee;border:1px solid var(--verde);color:var(--verde);padding:10px 12px;border-radius:10px;margin-bottom:12px;font-weight:500}

@@ -12,5 +12,6 @@ export const NEG = [
     { id: 'choux', nombre: 'Choux', min: 5, precio: 65 }, { id: 'brownie', nombre: 'Brownie', min: 3, precio: 55 }] }
 ];
 export const METODOS = ['Crédito de la facultad', 'Tarjeta de débito', 'Pagado a meses', 'Pago en efectivo'];
+export const CLIENTE = { nombre: 'Maxine Roux', edad: 17, cuenta: '20137086', facultad: 'Facultad de Telemática', carrera: 'Ingeniería de Software' };
 export const HORAS = ['3:30 pm', '4:00 pm', '4:30 pm', '5:00 pm', '5:15 pm', '5:30 pm'];
 export const neg = id => NEG.find(n => n.id === id);
