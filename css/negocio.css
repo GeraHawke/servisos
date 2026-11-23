@@ -11,7 +11,7 @@ main{max-width:1100px;padding-bottom:40px}.ord{display:block}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.grid h2{margin-top:0}
 @media(max-width:820px){.grid{grid-template-columns:1fr}}
 .tabs{display:flex;gap:4px;margin-left:18px}.tabs button{background:none;border:0;padding:8px 14px;border-radius:8px}.tabs .on{background:var(--claro);font-weight:600}
-.resumen{display:flex;gap:12px;margin-bottom:16px}.resumen>div{flex:1;background:rgba(255,255,255,.9);border:1px solid var(--borde);border-radius:12px;padding:12px 14px}.resumen b{font:500 22px Unbounded,sans-serif;display:block}
+.resumen{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px}.resumen>div{flex:1;min-width:150px;background:rgba(255,255,255,.9);border:1px solid var(--borde);border-radius:12px;padding:12px 14px}.resumen b{font:500 22px Unbounded,sans-serif;display:block}
 .tblw{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;background:rgba(255,255,255,.92);border:1px solid var(--borde)}
 .tbl th{text-align:left;font-weight:600;color:var(--mut);font-size:13px;padding:10px 12px;background:#f4f7f8;border-bottom:1px solid var(--borde)}
 .tbl td{padding:10px 12px;border-bottom:1px solid var(--borde);vertical-align:top}

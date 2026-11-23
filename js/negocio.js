@@ -36,14 +36,16 @@ ${esp ? '<p class="ambar">Esperando que el cliente acepte el cambio de tiempo…
     return `<div class="ord"><b>Orden #${p.compra} · ${lista(p)}</b><small>${(p.cliente || CLIENTE).nombre} · ${slot(p)} · <span class="chip ${p.est}">${ETQ[p.est]}</span></small>${ex}<div class="btns">${bt}<button class="peligro" data-act="cancelneg" data-id="${p.id}">Cancelar orden</button></div></div>`; }).join('');
   return `<p class="cap mut">Ahora ${nAhora}/${CFG.CAP} · Programadas ${nProg}${E.pausa ? ' · <b class="rojo">Pedidos pausados</b>' : ''}</p><div class="grid"><div>${hs}</div><div>${ho}</div></div>`;
 }
+const ingreso = p => (p.est === 'entregada' || p.est === 'norecogida') ? neto(p) : (p.est === 'cancelada' && p.cargo) ? Math.round(neto(p) * CFG.CARGO_CANC) : 0;
 function vVentas(mis) {
   const v = mis.filter(p => p.fase === 'ord').sort((a, b) => b.tOrd - a.tOrd);
-  const ent = v.filter(p => p.est === 'entregada'), proc = v.filter(p => ['recibida', 'preparando', 'lista'].includes(p.est)), perd = v.filter(p => ['norecogida', 'canceladaneg', 'cancelada'].includes(p.est));
-  const h = `<h2>Registro de ventas</h2><div class="resumen"><div><small>Vendido (entregado)</small><b>${money(ent.reduce((a, p) => a + neto(p), 0))}</b></div><div><small>Entregadas</small><b>${ent.length}</b></div><div><small>En proceso</small><b>${proc.length}</b></div><div><small>Canceladas / no recogidas</small><b>${perd.length}</b></div></div>`;
+  const ent = v.filter(p => p.est === 'entregada'), nor = v.filter(p => p.est === 'norecogida'), proc = v.filter(p => ['recibida', 'preparando', 'lista'].includes(p.est)), can = v.filter(p => ['cancelada', 'canceladaneg'].includes(p.est));
+  const suma = l => l.reduce((a, p) => a + ingreso(p), 0);
+  const h = `<h2>Registro de ventas</h2><div class="resumen"><div><small>Ingresos (entregado + no recogido + cargos)</small><b>${money(suma(v))}</b></div><div><small>Entregadas</small><b>${ent.length}</b><small>${money(suma(ent))}</small></div><div><small>No recogidas</small><b>${nor.length}</b><small>${money(suma(nor))}</small></div><div><small>En proceso</small><b>${proc.length}</b></div><div><small>Canceladas</small><b>${can.length}</b><small>cargos ${money(suma(can))}</small></div></div>`;
   if (!v.length) return h + '<p class="mut">Todavía no hay ventas.</p>';
-  return h + `<div class="tblw"><table class="tbl"><thead><tr><th>Orden</th><th>Cliente</th><th>Pedido</th><th>Total</th><th>Método de pago</th><th>Pagada</th><th>Estado</th><th>Cierre</th></tr></thead><tbody>`
+  return h + `<div class="tblw"><table class="tbl"><thead><tr><th>Orden</th><th>Cliente</th><th>Pedido</th><th>Pagado</th><th>Ingreso</th><th>Método de pago</th><th>Pagada</th><th>Estado</th><th>Cierre</th></tr></thead><tbody>`
     + v.map(p => { const c = p.cliente || CLIENTE;
-      return `<tr><td>#${p.compra}</td><td><b>${c.nombre}</b><small>${c.cuenta} · ${c.edad} años</small><small>${c.carrera}, ${c.facultad}</small></td><td>${p.items.map(i => `${i.nombre} x${i.cant}`).join('<br>')}<small>${slot(p)}</small></td><td>${money(neto(p))}${p.desc ? `<small>bonif. −${money(p.desc)}</small>` : ''}</td><td>${(E.metodo || {})[p.compra] || '—'}</td><td>${fh(p.tOrd)}</td><td><span class="chip ${p.est}">${ETQ[p.est]}</span>${p.est === 'cancelada' ? `<small>${p.cargo ? 'con cargo' : 'sin cargo'}</small>` : ''}${p.est === 'canceladaneg' ? '<small>reembolso + 50% próximo pedido</small>' : ''}</td><td>${fh(p.tEntrega || p.tCierre)}</td></tr>`; }).join('') + '</tbody></table></div>';
+      return `<tr><td>#${p.compra}</td><td><b>${c.nombre}</b><small>${c.cuenta} · ${c.edad} años</small><small>${c.carrera}, ${c.facultad}</small></td><td>${p.items.map(i => `${i.nombre} x${i.cant}`).join('<br>')}<small>${slot(p)}</small></td><td>${money(neto(p))}${p.desc ? `<small>bonif. −${money(p.desc)}</small>` : ''}</td><td><b>${money(ingreso(p))}</b>${p.est === 'norecogida' ? '<small>pagada y preparada</small>' : ''}${p.est === 'cancelada' && p.cargo ? `<small>cargo ${Math.round(CFG.CARGO_CANC * 100)} %</small>` : ''}</td><td>${(E.metodo || {})[p.compra] || '—'}</td><td>${fh(p.tOrd)}</td><td><span class="chip ${p.est}">${ETQ[p.est]}</span>${p.est === 'cancelada' ? `<small>${p.cargo ? 'con cargo' : 'sin cargo'}</small>` : ''}${p.est === 'canceladaneg' ? '<small>reembolso + 50% próximo pedido</small>' : ''}</td><td>${fh(p.tEntrega || p.tCierre)}</td></tr>`; }).join('') + '</tbody></table></div>';
 }
 function draw() {
   const mis = E.ped.filter(p => p.neg === CFG.MANUAL);
@@ -63,7 +65,7 @@ document.addEventListener('click', ev => {
   if (a === 'rechazar' || a === 'retirar') set(id, p => { p.est = 'rechazada'; });
   if (a === 'empezar') set(id, p => { p.est = 'preparando'; p.tInicio = ahora(); });
   if (a === 'lista') set(id, p => { p.est = 'lista'; p.tLista = ahora(); });
-  if (a === 'norec' && confirm('¿Marcar como NO RECOGIDO? La orden se destruye sin compensación y pasa al historial.')) set(id, p => { p.est = 'norecogida'; p.tCierre = ahora(); });
+  if (a === 'norec' && confirm('¿Marcar como NO RECOGIDO? La orden se destruye sin compensación y pasa al historial; el ingreso se conserva porque ya estaba pagada y preparada.')) set(id, p => { p.est = 'norecogida'; p.tCierre = ahora(); });
   if (a === 'cancelneg' && confirm('¿Cancelar esta orden? El cliente recibe reembolso del 100% y 50% de bonificación en su próximo pedido.'))
     set(id, (p, e) => { p.est = 'canceladaneg'; p.tCierre = ahora(); (e.cupones = e.cupones || []).push({ neg: p.neg, pct: 50, usado: false, compra: p.compra }); });
 });

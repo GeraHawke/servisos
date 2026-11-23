@@ -3,7 +3,7 @@ import { leer, guardar, alCambiar, ahora } from './estado.js';
 import { tick } from './simulador.js';
 
 // car: { 'negocio|ahora' | 'negocio|prog:5:00 pm' : { idProducto: cantidad } }  -> cada clave es una orden distinta
-let E = leer(), rid = E.rid, pant = 'inicio', nid = null, modo = 'ahora', hora = HORAS[3], car = {}, sel = {}, modal = false, det = null, hist = false, copiado = null, flash = '', flashT = null, last = '';
+let E = leer(), rid = E.rid, pant = 'inicio', nid = null, modo = 'ahora', hora = HORAS[3], car = {}, sel = {}, modal = false, det = null, hist = false, copiado = null, flash = '', flashT = null, warn = '', warnT = null, last = '';
 const app = document.getElementById('app'), nav = document.getElementById('nav');
 const toast = document.getElementById('toast'), btnSnd = document.getElementById('snd'), prev = {};
 let sonido = true, ctx = null;
@@ -51,6 +51,10 @@ const cupon = n => (E.cupones || []).find(c => c.neg === n && !c.usado);
 const ahorro = (p, s) => { const c = cupon(p.neg); return c && s.find(x => x.neg === p.neg) === p ? Math.round(tot(p) * c.pct / 100) : 0; };
 const neto = s => s.reduce((a, p) => a + tot(p) - ahorro(p, s), 0);
 function mut(fn) { E = leer(); fn(E); guardar(E); draw(); }
+function aviso(m) { warn = m; clearTimeout(warnT); warnT = setTimeout(() => { warn = ''; draw(); }, 3500); draw(); }
+function tope(k, id, extra) { const q = car[k] || {}, enc = q[id] || 0, tk = Object.values(q).reduce((x, y) => x + y, 0);
+  if (enc + extra > CFG.MAX_PROD) return `Máximo ${CFG.MAX_PROD} por producto. Para pedidos más grandes, consulta en el mostrador.`;
+  if (tk + extra > CFG.MAX_ORDEN) return `Máximo ${CFG.MAX_ORDEN} productos por orden. Para pedidos más grandes, consulta en el mostrador.`; return ''; }
 function copiarTxt(t) { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); try { document.execCommand('copy'); } catch (e) {} x.remove(); }
 
 const vInicio = () => { const cu = (E.cupones || []).filter(c => !c.usado);
@@ -67,7 +71,7 @@ ${enviado ? '<p><small class="ambar">Esta orden ya fue solicitada. Si agregas m�
       : `<div class="row"><div><b>${m.nombre}</b><small>~${m.min} min${enc ? ` · <b class="verde">${enc} en el carrito (${etq(modo, hora)})</b>` : ''}</small></div><span>${money(m.precio)}</span><div class="qty"><button data-act="menos" data-id="${m.id}">−</button><i>${c}</i><button data-act="mas" data-id="${m.id}">+</button></div></div>`; }).join('')
   + `<button class="primary foot" data-act="agregar" ${selCant() ? '' : 'disabled'}>Agregar al carrito (${selCant()}) · ${money(selTotal())}</button>`
   + (cantTotal() ? `<button class="ghost foot" data-act="carrito">Ver carrito (${cantTotal()}) · ${money(totalCar())}</button>` : '')
-  + (flash ? `<p class="verde" style="text-align:center">${flash}</p>` : ''); };
+  + (flash ? `<p class="verde" style="text-align:center">${flash}</p>` : '') + (warn ? `<p class="rojo" style="text-align:center">${warn}</p>` : ''); };
 
 const rowSol = p => { const n = neg(p.neg), b = base(p); let st = '', bt = '';
   const cancelar = `<div class="btns"><button class="ghost" data-act="retirar" data-id="${p.id}">Cancelar solicitud</button></div>`;
@@ -86,7 +90,7 @@ const vCarrito = () => { const s = sols(), b = borradores();
   if (!s.length && !b.length) return '<div style="text-align:center;padding:60px 10px"><div style="font-size:44px">🫙</div><h2>Demasiado vacío…</h2><p class="mut">Añade algo delicioso y vuelve.</p><button class="primary" data-act="inicio">Ver negocios</button></div>';
   const v = vig(), listo = !b.length && s.every(p => p.est === 'aceptada'), f = s.filter(p => p.est !== 'aceptada').length;
   return `<div class="bar"><button class="link" data-act="inicio">←</button><h2 style="margin:0;flex:1">Mi carrito</h2>${v !== null ? `<small class="rojo">Vigencia ${mmss(v)}</small>` : ''}</div>`
-    + s.map(rowSol).join('') + b.map(rowBorr).join('') + `<div class="tot"><span>Total</span><span>${money(neto(s) + b.reduce((a, k) => a + subDe(k), 0))}</span></div>`
+    + (warn ? `<p class="rojo" style="text-align:center">${warn}</p>` : '') + s.map(rowSol).join('') + b.map(rowBorr).join('') + `<div class="tot"><span>Total</span><span>${money(neto(s) + b.reduce((a, k) => a + subDe(k), 0))}</span></div>`
     + (b.length ? `<button class="primary foot" data-act="solicitar">Pedir confirmación (${b.length} orden${b.length > 1 ? 'es' : ''})</button>`
       : `<button class="primary foot" data-act="pago" ${listo ? '' : 'disabled'}>${listo ? 'Pagar' : `Pagar (faltan ${f} respuesta${f > 1 ? 's' : ''})`}</button>`)
     + '<button class="ghost foot" data-act="inicio">+ Seguir agregando</button>'; };
@@ -103,7 +107,7 @@ const rowOrd = p => { if (!activo(p)) return `<button class="card" data-act="det
   let ex = '';
   if (p.est === 'preparando' && p.neg === CFG.MANUAL) { const r = (p.tInicio + (base(p) + p.minExtra) * 60000 - ahora()) / 1000; ex = r > 0 ? `<small>Tiempo estimado restante ${mmss(r)}</small>` : '<small>Tiempo estimado cumplido</small>'; }
   if (p.est === 'lista') ex = '<small class="verde">Pasa a recoger con tu código</small>';
-  const bt = p.est === 'recibida' ? `<button class="ghost" data-act="cancelord" data-id="${p.id}">Cancelar (sin cargo)</button>` : p.est === 'preparando' ? `<button class="peligro" data-act="cancelord" data-id="${p.id}">Cancelar (con cargo)</button>` : '';
+  const bt = p.est === 'recibida' ? `<button class="ghost" data-act="cancelord" data-id="${p.id}">Cancelar (sin cargo)</button>` : p.est === 'preparando' ? `<button class="peligro" data-act="cancelord" data-id="${p.id}">Cancelar (con cargo del ${Math.round(CFG.CARGO_CANC * 100)} %)</button>` : '';
   return `<div class="ord"><div><b>${neg(p.neg).nombre}</b><small>${lista(p)} · ${etq(p.modo, p.hora)}</small><span class="chip ${p.est}">${ETQ[p.est]}</span>${ex}</div>${bt}</div>`; };
 const agrupa = l => { const r = {}; l.forEach(p => (r[p.compra] = r[p.compra] || []).push(p)); return r; };
 const vPedidos = () => { const o = ords(), act = o.filter(activo), old = o.filter(p => !activo(p)), ga = agrupa(act);
@@ -123,6 +127,7 @@ const vDet = () => { const p = E.ped.find(x => x.id === det); if (!p) return '';
    + (p.desc ? `<tr><td>Bonificación</td><td>−${money(p.desc)}</td></tr>` : '') + `<tr><td>Total pagado</td><td>${money(pagado)}</td></tr>`
    + `<tr><td>Método de pago</td><td>${(E.metodo || {})[p.compra] || '—'}</td></tr><tr><td>Pagado el</td><td>${fh(p.tOrd)}</td></tr>`
    + (p.est === 'entregada' ? `<tr><td>Código usado</td><td>${E.cod[p.compra]}</td></tr><tr><td>Recogido el</td><td>${fh(p.tEntrega)}</td></tr>` : '')
+   + (p.est === 'cancelada' ? (p.cargo ? `<tr><td>Cargo por cancelación</td><td>${money(Math.round(pagado * CFG.CARGO_CANC))} (${Math.round(CFG.CARGO_CANC * 100)} %)</td></tr><tr><td>Reembolso</td><td>${money(pagado - Math.round(pagado * CFG.CARGO_CANC))}</td></tr>` : `<tr><td>Reembolso</td><td>${money(pagado)} (100 %)</td></tr>`) : '')
    + (p.est === 'norecogida' ? `<tr><td>Resultado</td><td>No se recogió antes del cierre; se destruyó sin compensación (${fh(p.tCierre)}).</td></tr>` : '')
    + (p.est === 'canceladaneg' ? `<tr><td>Reembolso</td><td>${money(pagado)} (100%) a ${(E.metodo || {})[p.compra] || 'tu método de pago'}</td></tr><tr><td>Bonificación</td><td>50% en tu próximo pedido en ${neg(p.neg).nombre}</td></tr><tr><td>Cancelada el</td><td>${fh(p.tCierre)}</td></tr>` : '')
    + `</table><div class="btns"><button class="primary" data-act="cerrardet">Cerrar</button></div></div></div>`; };
@@ -145,12 +150,17 @@ document.addEventListener('click', ev => {
     case 'inicio': pant = 'inicio'; draw(); break;
     case 'neg': if (cerrado(neg(id))) return; nid = id; sel = {}; flash = ''; pant = 'menu'; draw(); break;
     case 'modo': modo = el.dataset.v; draw(); break;
-    case 'mas': case 'menos': sel[id] = Math.max(0, (sel[id] || 0) + (a === 'mas' ? 1 : -1)); draw(); break;
+    case 'mas': case 'menos': { if (a === 'mas') { const k = keyActual(), q = car[k] || {}, enc = q[id] || 0, tk = Object.values(q).reduce((x, y) => x + y, 0);
+        if (enc + (sel[id] || 0) >= CFG.MAX_PROD) { aviso(`Máximo ${CFG.MAX_PROD} por producto. Para pedidos más grandes, consulta en el mostrador.`); break; }
+        if (tk + selCant() >= CFG.MAX_ORDEN) { aviso(`Máximo ${CFG.MAX_ORDEN} productos por orden. Para pedidos más grandes, consulta en el mostrador.`); break; } }
+      sel[id] = Math.max(0, (sel[id] || 0) + (a === 'mas' ? 1 : -1)); draw(); break; }
     case 'agregar': { const k = keyActual(); car[k] = car[k] || {};
       for (const [i, c] of Object.entries(sel)) if (c > 0) car[k][i] = (car[k][i] || 0) + c;
       sel = {}; flash = 'Agregado al carrito ✓'; clearTimeout(flashT); flashT = setTimeout(() => { flash = ''; if (pant === 'menu') draw(); }, 2000);
       if (sols().some(p => p.key === k)) mut(e => { e.ped = e.ped.filter(p => !(p.fase === 'sol' && p.compra === e.abierta && p.key === k)); }); else draw(); break; }
-    case 'cmas': case 'cmenos': { const k = el.dataset.k; car[k][id] = Math.max(0, (car[k][id] || 0) + (a === 'cmas' ? 1 : -1)); draw(); break; }
+    case 'cmas': case 'cmenos': { const k = el.dataset.k;
+      if (a === 'cmas') { const m = tope(k, id, 1); if (m) { aviso(m); break; } }
+      car[k][id] = Math.max(0, (car[k][id] || 0) + (a === 'cmas' ? 1 : -1)); draw(); break; }
     case 'carrito': pant = 'carrito'; draw(); break;
     case 'solicitar': enviar(); break;
     case 'retirar': mut(e => { e.ped = e.ped.filter(x => x.id !== pid); }); break;

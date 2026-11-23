@@ -1,5 +1,5 @@
 // Todo lo configurable vive aquí. Para probar rápido, baja VIGENCIA_S y ESPERA_MAX_S.
-export const CFG = { VIGENCIA_S: 300, ESPERA_MAX_S: 180, RESP_MIN_S: 3, RESP_MAX_S: 10, CIERRE: '6:30 pm', MANUAL: 'scarlett', CAP: 5 };
+export const CFG = { VIGENCIA_S: 300, ESPERA_MAX_S: 180, RESP_MIN_S: 3, RESP_MAX_S: 10, CIERRE: '6:30 pm', MANUAL: 'scarlett', CAP: 5, MAX_PROD: 5, MAX_ORDEN: 10, CARGO_CANC: 0.5 };
 export const NEG = [
   { id: 'scarlett', nombre: "Scarlett's", sub: 'Aqua Foodies · Mariscos', estado: 'abierto', entrega: 'Puntual', menu: [
     { id: 'sushi', nombre: 'Sushi', min: 20, precio: 95 }, { id: 'yaki', nombre: 'Yakimeshi', min: 30, precio: 85 },
